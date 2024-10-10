@@ -7,7 +7,7 @@ import gdown  # Importing gdown to download from Google Drive
 
 # Function to download the model from Google Drive
 def download_model_from_drive():
-    file_id = '1yNbICx_rQWw-fwGsIdkAXVQrg3ct8PDn'  # Your new Google Drive file ID
+    file_id = '1oS3Sclg0l_kZ_wV5MvG7joKljjZOimS_'  # Your new Google Drive file ID
     url = f'https://drive.google.com/uc?id={file_id}'
     output = './weights/modelnew.weights.h5'  # Path to save the downloaded file
 
