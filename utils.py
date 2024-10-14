@@ -46,13 +46,13 @@ def model_arc():
     model.add(Dense(256, activation='relu'))
     model.add(BatchNormalization())
     model.add(Dropout(0.5))
-    model.add(Dense(7, activation='softmax'))  # 7 classes for classification
+    model.add(Dense(6, activation='softmax'))  # Updated to 6 classes for classification
     
     return model
 
 def gen_labels():
     """
     Generate labels for the classes.
-    Modify this list according to your specific classes.
+    Modified for 6 waste categories.
     """
-    return ["Cardboard", "Glass", "Metal", "Paper", "Plastic", "Trash", "Compost"]
+    return ["Cardboard", "Glass", "Metal", "Paper", "Plastic", "Compost"]
