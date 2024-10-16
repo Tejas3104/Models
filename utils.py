@@ -1,7 +1,5 @@
+from tensorflow.keras.models import load_model
 import numpy as np
-from tensorflow.keras.applications import VGG16
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Flatten, Dropout, BatchNormalization
 from tensorflow.keras.preprocessing.image import img_to_array
 from PIL import Image
 
@@ -16,43 +14,24 @@ def preprocess(image):
     if image.mode != 'RGB':
         image = image.convert('RGB')
     
-    target_size = (224, 224)  # Example for VGG16
+    target_size = (224, 224)  # Match the size of the Teachable Machine model
     image = image.resize(target_size)
     
     image = img_to_array(image)
     image = np.expand_dims(image, axis=0)
-    image = image / 255.0
+    image = image / 255.0  # Normalize the pixel values
     
     return image
 
 def model_arc():
     """
-    Build and return the model architecture based on VGG16.
+    Load the pre-trained Teachable Machine model from 'keras.h5'.
     """
-    model = Sequential()
-    
-    # Load pre-trained VGG16 model (without top layers)
-    vgg_base = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
-
-    # Freeze the base layers
-    for layer in vgg_base.layers:
-        layer.trainable = False
-    
-    model.add(vgg_base)  # Add the pre-trained VGG16 base
-    model.add(Flatten())
-    model.add(Dense(512, activation='relu'))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.5))
-    model.add(Dense(256, activation='relu'))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.5))
-    model.add(Dense(6, activation='softmax'))  # Updated to 6 classes for classification
-    
+    model = load_model('keras.h5')  # Replace this with the path to your downloaded model
     return model
 
 def gen_labels():
     """
-    Generate labels for the classes.
-    Modified for 6 waste categories.
+    Generate labels for the classes. Update these to match the classes from Teachable Machine.
     """
-    return ["Cardboard", "Glass", "Metal", "Paper", "Plastic", "Compost"]
+    return ["Cardboard", "Glass", "Metal", "Paper", "Plastic", "Compost"]  # Adjust if needed
