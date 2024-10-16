@@ -1,7 +1,10 @@
 import streamlit as st
 import os
+import numpy as np
 from keras.models import load_model
 from keras.layers import DepthwiseConv2D
+from keras.preprocessing import image
+from keras.applications.mobilenet_v2 import preprocess_input  # Adjust according to your model
 
 # Custom DepthwiseConv2D class to handle loading without 'groups' argument
 class CustomDepthwiseConv2D(DepthwiseConv2D):
@@ -38,6 +41,14 @@ def load_labels():
     print("Labels loaded successfully.")
     return labels
 
+# Function to preprocess the uploaded image
+def preprocess_image(uploaded_file):
+    img = image.load_img(uploaded_file, target_size=(224, 224))  # Adjust according to your model's input size
+    img_array = image.img_to_array(img)
+    img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
+    img_array = preprocess_input(img_array)  # Preprocess for your model (e.g., MobileNetV2)
+    return img_array
+
 # Check the current working directory
 print("Current Working Directory:", os.getcwd())
 
@@ -60,14 +71,15 @@ st.write("Upload an image of waste to classify it.")
 uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    # Here you can process the uploaded image and make predictions using the model
+    # Display uploaded image
     st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
     st.write("")
     st.success("Image uploaded successfully!")
     
-    # Add your model prediction code here
-    # Example:
-    # image = preprocess_image(uploaded_file)
-    # predictions = model.predict(image)
-    # predicted_label = labels[np.argmax(predictions)]
-    # st.write(f"Predicted label: {predicted_label}")
+    # Preprocess the image and make predictions using the model
+    image_data = preprocess_image(uploaded_file)
+    predictions = model.predict(image_data)
+    predicted_label = labels[np.argmax(predictions)]
+    
+    # Display the predicted label
+    st.write(f"Predicted label: {predicted_label}")
