@@ -17,7 +17,7 @@ def download_resources():
     labels_file_id = '152Inf1coCnjzZ2dulPew-PeZBVeROpb6'  # Labels file ID
 
     # Paths to save the downloaded files
-    keras_output_path = './weights/keras_model.h5'
+    keras_output_path = './weights/keras_model.h5'  # Ensure this matches the actual filename
     labels_output_path = './weights/labels.txt'
 
     # Create a directory for weights if it doesn't exist
