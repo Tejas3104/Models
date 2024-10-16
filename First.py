@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import os
 from PIL import Image
-from utils import preprocess, model_arc, gen_labels
+from utils import preprocess, model_arc  # Ensure utils.py is correctly implemented
 import gdown  # Importing gdown to download from Google Drive
 
 # Function to download a file from Google Drive
@@ -17,7 +17,7 @@ def download_resources():
     labels_file_id = '152Inf1coCnjzZ2dulPew-PeZBVeROpb6'  # Labels file ID
 
     # Paths to save the downloaded files
-    keras_output_path = './weights/keras_model.h5'  # Ensure this matches the actual filename
+    keras_output_path = './weights/keras_model.h5'  # Correct model filename
     labels_output_path = './weights/labels.txt'
 
     # Create a directory for weights if it doesn't exist
