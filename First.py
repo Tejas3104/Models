@@ -1,6 +1,14 @@
 import streamlit as st
 import os
 from keras.models import load_model
+from keras.layers import DepthwiseConv2D
+
+# Custom DepthwiseConv2D class to handle loading without 'groups' argument
+class CustomDepthwiseConv2D(DepthwiseConv2D):
+    def __init__(self, *args, **kwargs):
+        # Remove unsupported 'groups' argument if present
+        kwargs.pop('groups', None)
+        super().__init__(*args, **kwargs)
 
 # Function to load the model
 def load_model_func():
@@ -11,7 +19,8 @@ def load_model_func():
     if not os.path.isfile(model_path):
         raise FileNotFoundError(f"Model file not found: {model_path}")
     
-    model = load_model(model_path)
+    # Load the model with custom_objects
+    model = load_model(model_path, custom_objects={'DepthwiseConv2D': CustomDepthwiseConv2D})
     print("Model loaded successfully.")
     return model
 
@@ -52,7 +61,6 @@ uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png
 
 if uploaded_file is not None:
     # Here you can process the uploaded image and make predictions using the model
-    # For example, you can read the image, preprocess it, and pass it to the model
     st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
     st.write("")
     st.success("Image uploaded successfully!")
@@ -63,4 +71,3 @@ if uploaded_file is not None:
     # predictions = model.predict(image)
     # predicted_label = labels[np.argmax(predictions)]
     # st.write(f"Predicted label: {predicted_label}")
-
