@@ -3,23 +3,18 @@ import numpy as np
 import os
 from PIL import Image
 from utils import preprocess, model_arc, gen_labels
-import requests
+import gdown  # Importing gdown to download from Google Drive
 
-# Function to download a file from GitHub
-def download_file_from_github(url, output_path):
-    response = requests.get(url)
-    if response.status_code == 200:
-        with open(output_path, 'wb') as f:
-            f.write(response.content)
-        st.success(f"Downloaded: {output_path}")
-    else:
-        st.error(f"Failed to download: {url}")
+# Function to download a file from Google Drive
+def download_file_from_drive(file_id, output_path):
+    url = f'https://drive.google.com/uc?id={file_id}'
+    gdown.download(url, output_path, quiet=False)
 
 # Function to download model weights and labels
 def download_resources():
-    # URLs for the model and labels
-    keras_file_url = 'https://raw.githubusercontent.com/Tejas3104/Models/main/keras_model.h5'
-    labels_file_url = 'https://raw.githubusercontent.com/Tejas3104/Models/main/labels.txt'
+    # Google Drive file IDs
+    keras_file_id = '1pwyZ6uovXtFE4fA-Xt8-6wjnpeaTq494'  # Keras model file ID
+    labels_file_id = '152Inf1coCnjzZ2dulPew-PeZBVeROpb6'  # Labels file ID
 
     # Paths to save the downloaded files
     keras_output_path = './weights/keras_model.h5'
@@ -30,13 +25,15 @@ def download_resources():
 
     # Download the model file
     if not os.path.exists(keras_output_path):
-        download_file_from_github(keras_file_url, keras_output_path)
+        st.write("Downloading model weights from Google Drive...")
+        download_file_from_drive(keras_file_id, keras_output_path)
     else:
         st.write("Model weights already downloaded.")
 
     # Download the labels file
     if not os.path.exists(labels_output_path):
-        download_file_from_github(labels_file_url, labels_output_path)
+        st.write("Downloading labels file from Google Drive...")
+        download_file_from_drive(labels_file_id, labels_output_path)
     else:
         st.write("Labels file already downloaded.")
 
@@ -44,7 +41,7 @@ def download_resources():
 download_resources()
 
 # Paths to the downloaded files
-model_weights_path = './weights/keras_model.h5'
+model_weights_path = './weights/keras_model.h5'  # Ensure the path is correct
 labels_path = './weights/labels.txt'
 
 # Cache the model loading to avoid reloading on every interaction
