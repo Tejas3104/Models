@@ -1,36 +1,46 @@
 import streamlit as st
 import numpy as np
 import os
+import requests
 from PIL import Image
 from utils import preprocess, model_arc, gen_labels
-import gdown  # Importing gdown to download from Google Drive
 
-# Function to download the new model from Google Drive
-def download_model_from_drive():
-    file_id = '1jXEdOZX24oB1-15gxSiiEoeDkD7X2nDT'  # Your new Google Drive file ID
-    url = f'https://drive.google.com/uc?id={file_id}'
-    output = './weights/new_model.weights.h5'  # Path to save the downloaded file
-
-    # Check if the model weights are already downloaded, if not, download them
-    if not os.path.exists(output):
-        st.write("Downloading new model weights from Google Drive...")
-        os.makedirs('./weights', exist_ok=True)  # Ensure the weights folder exists
-        gdown.download(url, output, quiet=False)
+# Function to download a file from GitHub
+def download_file_from_github(url, output_path):
+    response = requests.get(url)
+    if response.status_code == 200:
+        with open(output_path, 'wb') as f:
+            f.write(response.content)
+        st.write(f"Downloaded: {output_path}")
     else:
-        st.write("Model weights already downloaded.")
+        st.error(f"Failed to download file from {url}")
 
-# Download the model if not present
-download_model_from_drive()
+# Paths to the files on GitHub
+model_url = 'https://github.com/Tejas3104/Models/raw/main/keras.h5'
+labels_url = 'https://github.com/Tejas3104/Models/raw/main/labels.txt'
 
-# Path to the downloaded model weights
-model_weights_path = './weights/new_model.weights.h5'
+# Local paths where the files will be saved
+model_path = './models/keras.h5'
+labels_path = './models/labels.txt'
+
+# Ensure the directory exists
+os.makedirs('./models', exist_ok=True)
+
+# Download the model and labels if not present
+if not os.path.exists(model_path):
+    st.write("Downloading model from GitHub...")
+    download_file_from_github(model_url, model_path)
+
+if not os.path.exists(labels_path):
+    st.write("Downloading labels from GitHub...")
+    download_file_from_github(labels_url, labels_path)
 
 # Cache the model loading to avoid reloading on every interaction
 @st.cache_resource
 def load_model():
     model = model_arc()  # Get the architecture from utils.py
-    if os.path.exists(model_weights_path):
-        model.load_weights(model_weights_path)  # Load saved weights
+    if os.path.exists(model_path):
+        model.load_weights(model_path)  # Load saved weights
     else:
         st.error("Model weights file not found. Please check the path.")
     return model
@@ -72,11 +82,12 @@ if image_file is not None:
     # Predict using the loaded model
     prediction = model.predict(image_array)
 
+    # Read and load class labels from the labels.txt file
+    with open(labels_path, 'r') as f:
+        labels = f.read().splitlines()
+
     # Get the predicted class index and label
     predicted_class = np.argmax(prediction, axis=1)
-    
-    # Get class labels (you need to define these in utils.py)
-    labels = gen_labels()
     predicted_label = labels[predicted_class[0]]
 
     # Display the prediction
