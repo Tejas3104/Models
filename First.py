@@ -1,110 +1,66 @@
 import streamlit as st
-import numpy as np
 import os
-from PIL import Image
-from utils import preprocess, model_arc  # Ensure utils.py is correctly implemented
-import gdown  # Importing gdown to download from Google Drive
+from keras.models import load_model
 
-# Function to download a file from Google Drive
-def download_file_from_drive(file_id, output_path):
-    url = f'https://drive.google.com/uc?id={file_id}'
-    gdown.download(url, output_path, quiet=False)
-
-# Function to download model weights and labels
-def download_resources():
-    # Google Drive file IDs
-    keras_file_id = '1pwyZ6uovXtFE4fA-Xt8-6wjnpeaTq494'  # Keras model file ID
-    labels_file_id = '152Inf1coCnjzZ2dulPew-PeZBVeROpb6'  # Labels file ID
-
-    # Paths to save the downloaded files
-    keras_output_path = './weights/keras_model.h5'  # Correct model filename
-    labels_output_path = './weights/labels.txt'
-
-    # Create a directory for weights if it doesn't exist
-    os.makedirs('./weights', exist_ok=True)
-
-    # Download the model file
-    if not os.path.exists(keras_output_path):
-        st.write("Downloading model weights from Google Drive...")
-        download_file_from_drive(keras_file_id, keras_output_path)
-    else:
-        st.write("Model weights already downloaded.")
-
-    # Download the labels file
-    if not os.path.exists(labels_output_path):
-        st.write("Downloading labels file from Google Drive...")
-        download_file_from_drive(labels_file_id, labels_output_path)
-    else:
-        st.write("Labels file already downloaded.")
-
-# Download resources if not present
-download_resources()
-
-# Paths to the downloaded files
-model_weights_path = './weights/keras_model.h5'  # Ensure the path is correct
-labels_path = './weights/labels.txt'
-
-# Cache the model loading to avoid reloading on every interaction
-@st.cache_resource
-def load_model():
-    model = model_arc()  # Get the architecture from utils.py
-    if os.path.exists(model_weights_path):
-        model.load_weights(model_weights_path)  # Load saved weights
-    else:
-        st.error("Model weights file not found. Please check the path.")
+# Function to load the model
+def load_model_func():
+    model_path = 'keras_model.h5'  # or provide the absolute path
+    print(f"Trying to load model from: {model_path}")
+    
+    # Check if the model file exists
+    if not os.path.isfile(model_path):
+        raise FileNotFoundError(f"Model file not found: {model_path}")
+    
+    model = load_model(model_path)
+    print("Model loaded successfully.")
     return model
 
-# Load the model when the app starts
-model = load_model()
-
-# Load labels from the labels file
+# Load the labels from the labels file
 def load_labels():
+    labels_path = 'labels.txt'  # or provide the absolute path
+    print(f"Trying to load labels from: {labels_path}")
+
+    # Check if the labels file exists
+    if not os.path.isfile(labels_path):
+        raise FileNotFoundError(f"Labels file not found: {labels_path}")
+
     with open(labels_path, 'r') as file:
         labels = file.read().splitlines()
+    print("Labels loaded successfully.")
     return labels
 
-# Load labels when the app starts
-labels = load_labels()
+# Check the current working directory
+print("Current Working Directory:", os.getcwd())
 
-# Define background and UI
-background_image_url = "https://png.pngtree.com/thumb_back/fh260/background/20220217/pngtree-green-simple-atmospheric-waste-classification-illustration-background-image_953325.jpg"
+# Load the model and labels when the app starts
+try:
+    model = load_model_func()
+except Exception as e:
+    st.error(f"Error loading model: {e}")
 
-st.markdown(
-    f"""
-    <style>
-    .stApp {{
-        background-image: url("{background_image_url}");
-        background-size: cover;
-        background-position: center;
-        color: white;
-    }}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+try:
+    labels = load_labels()
+except Exception as e:
+    st.error(f"Error loading labels: {e}")
 
-st.title("Waste Classification Model")
-st.write("Upload an image of waste for classification.")
+# Streamlit app layout
+st.title("Waste Classification App")
+st.write("Upload an image of waste to classify it.")
 
-# File uploader widget for image input
-image_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"], key="file_uploader_1")
+# Image upload
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
-if image_file is not None:
-    image = Image.open(image_file)
-    st.image(image, caption="Uploaded Image.", use_column_width=True)
-    st.write("Classifying...")
+if uploaded_file is not None:
+    # Here you can process the uploaded image and make predictions using the model
+    # For example, you can read the image, preprocess it, and pass it to the model
+    st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
+    st.write("")
+    st.success("Image uploaded successfully!")
+    
+    # Add your model prediction code here
+    # Example:
+    # image = preprocess_image(uploaded_file)
+    # predictions = model.predict(image)
+    # predicted_label = labels[np.argmax(predictions)]
+    # st.write(f"Predicted label: {predicted_label}")
 
-    # Preprocess the uploaded image
-    image_array = preprocess(image)
-
-    # Predict using the loaded model
-    prediction = model.predict(image_array)
-
-    # Get the predicted class index
-    predicted_class = np.argmax(prediction, axis=1)
-
-    # Get the predicted label
-    predicted_label = labels[predicted_class[0]]
-
-    # Display the prediction
-    st.write(f"Predicted Class: {predicted_label}")
