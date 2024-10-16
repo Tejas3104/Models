@@ -2,8 +2,8 @@ import streamlit as st
 import numpy as np
 import os
 from PIL import Image
+from utils import preprocess, model_arc, gen_labels
 import requests
-from utils import preprocess, model_arc, gen_labels  # Import model_arc from utils
 
 # Function to download a file from GitHub
 def download_file_from_github(url, output_path):
@@ -15,21 +15,37 @@ def download_file_from_github(url, output_path):
     else:
         st.error(f"Failed to download: {url}")
 
-# URLs to your files in GitHub
-keras_file_url = 'https://raw.githubusercontent.com/Tejas3104/Models/main/keras.h5'
-labels_file_url = 'https://raw.githubusercontent.com/Tejas3104/Models/main/labels.txt'
+# Function to download model weights and labels
+def download_resources():
+    # URLs for the model and labels
+    keras_file_url = 'https://raw.githubusercontent.com/Tejas3104/Models/main/keras_model.h5'
+    labels_file_url = 'https://raw.githubusercontent.com/Tejas3104/Models/main/labels.txt'
 
-# Download the files
-download_file_from_github(keras_file_url, './keras.h5')
-download_file_from_github(labels_file_url, './labels.txt')
+    # Paths to save the downloaded files
+    keras_output_path = './weights/keras_model.h5'
+    labels_output_path = './weights/labels.txt'
 
-# Load the model weights
-model_weights_path = './keras.h5'
-labels_path = './labels.txt'
+    # Create a directory for weights if it doesn't exist
+    os.makedirs('./weights', exist_ok=True)
 
-# Load the labels
-with open(labels_path, 'r') as f:
-    labels = [line.strip() for line in f.readlines()]
+    # Download the model file
+    if not os.path.exists(keras_output_path):
+        download_file_from_github(keras_file_url, keras_output_path)
+    else:
+        st.write("Model weights already downloaded.")
+
+    # Download the labels file
+    if not os.path.exists(labels_output_path):
+        download_file_from_github(labels_file_url, labels_output_path)
+    else:
+        st.write("Labels file already downloaded.")
+
+# Download resources if not present
+download_resources()
+
+# Paths to the downloaded files
+model_weights_path = './weights/keras_model.h5'
+labels_path = './weights/labels.txt'
 
 # Cache the model loading to avoid reloading on every interaction
 @st.cache_resource
@@ -43,6 +59,15 @@ def load_model():
 
 # Load the model when the app starts
 model = load_model()
+
+# Load labels from the labels file
+def load_labels():
+    with open(labels_path, 'r') as file:
+        labels = file.read().splitlines()
+    return labels
+
+# Load labels when the app starts
+labels = load_labels()
 
 # Define background and UI
 background_image_url = "https://png.pngtree.com/thumb_back/fh260/background/20220217/pngtree-green-simple-atmospheric-waste-classification-illustration-background-image_953325.jpg"
@@ -78,8 +103,10 @@ if image_file is not None:
     # Predict using the loaded model
     prediction = model.predict(image_array)
 
-    # Get the predicted class index and label
+    # Get the predicted class index
     predicted_class = np.argmax(prediction, axis=1)
+
+    # Get the predicted label
     predicted_label = labels[predicted_class[0]]
 
     # Display the prediction
