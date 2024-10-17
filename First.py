@@ -53,6 +53,9 @@ def preprocess_image(uploaded_file):
 print("Current Working Directory:", os.getcwd())
 
 # Load the model and labels when the app starts
+model = None
+labels = None
+
 try:
     model = load_model_func()
 except Exception as e:
@@ -75,11 +78,15 @@ if uploaded_file is not None:
     st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
     st.write("")
     st.success("Image uploaded successfully!")
-    
-    # Preprocess the image and make predictions using the model
-    image_data = preprocess_image(uploaded_file)
-    predictions = model.predict(image_data)
-    predicted_label = labels[np.argmax(predictions)]
-    
-    # Display the predicted label
-    st.write(f"Predicted label: {predicted_label}")
+
+    # Check if the model was loaded successfully before making predictions
+    if model is not None and labels is not None:
+        # Preprocess the image and make predictions using the model
+        image_data = preprocess_image(uploaded_file)
+        predictions = model.predict(image_data)
+        predicted_label = labels[np.argmax(predictions)]
+        
+        # Display the predicted label
+        st.write(f"Predicted label: {predicted_label}")
+    else:
+        st.error("Model or labels not available. Please check if they were loaded correctly.")
